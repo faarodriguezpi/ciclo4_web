@@ -1,0 +1,88 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-routing
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: api-gateway-spadline
+          uri: http://10.128.0.5:8085
+          predicates:
+            - Path=/spadline/**
+          filters:
+            - StripPrefix=1
+
+        - id: api-score-neo4j
+          uri: http://api-score-neo4j:9000
+          predicates:
+            - Path=/neo4j/**
+          filters:
+            - StripPrefix=1
+
+        - id: api-score-keycloak
+          uri: http://api-score-keycloak:8000
+          predicates:
+            - Path=/keycloak/**
+          filters:
+            - StripPrefix=1
+
+        - id: eureka-service
+          uri: http://eureka-service:8761
+          predicates:
+            - Path=/eurekaweb/**
+        - id: eureka-service-static
+          uri: http://eureka-service:8761
+          predicates:
+            - Path=/eureka/** ,
+        - id: eureka-service-actuator
+          uri: http://eureka-service:8761/actuator/eureka/**
+          predicates:
+            - Path=/actuator/eureka/**
+#Log
+logging:
+  level:
+    root: info
+    org:
+      springframework:
+        cloud:
+          gateway: trace
+          route:
+            RouteDefinitionRouteLocator: info
+
+#Actuator
+management:
+  endpoints:
+    health:
+      show-details: always
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+      base-path: /actuator
+
+#SpringDoc Swagger
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /spadline/api-core-spadline/v1/api-docs
+        name: API Core Spadline
+
+      - url: /spadline/api-crud-spadline/v1/api-docs
+        name: API Crud Spadline
+
+      - url: /neo4j/api-score-neo4j/v1/api-docs
+        name: API Score Neo4j
+
+      - url: /keycloak/api-score-keycloak/v1/api-docs
+        name: API Score Keycloak
